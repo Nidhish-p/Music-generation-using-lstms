@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Generator</title>
+    <link rel="stylesheet" href="/static/style1.css">
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <img src="/static/logo.jpeg" alt="Logo">
+        </div>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="{% url 'index'%}" class="left">Home</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <h1 class="gradient-text">Music Melody Generator</h1>
+
+    <div class="music-container">
+        <h2 class="text-section">Seed Music Samples</h2>
+        <form id="musicForm" action="{% url 'mg'%}" method="POST">
+            {% csrf_token %}
+        <input type="hidden" name="sample_no" id="sample_no">
+        <div class="music-sample">
+            <div class="music-box" data-id="1">
+                <img src="/static/Picture2.png" alt="Music Thumbnail">
+                <div class="play-icon"></div>
+                <audio>
+                    <source src="/static/Mono-Melodies-0002.mp3" type="audio/mpeg">
+                </audio>
+                <p>Sample 1</p>
+                <button class="select-btn" type='button'>Select</button>
+            </div>
+            <div class="music-box" data-id="2">
+                <img src="/static/Picture2.png" alt="Music Thumbnail">
+                <div class="play-icon"></div>
+                <audio>
+                    <source src="/static/Mono-Melodies-0002.mp3" type="audio/mpeg">
+                </audio>
+                <p>Sample 2</p>
+                <button class="select-btn" type='button'>Select</button>
+            </div>
+        
+            <div class="music-box" data-id="3">
+                <img src="/static/Picture2.png" alt="Music Thumbnail">
+                <div class="play-icon"></div>
+                <audio>
+                    <source src="/static/Mono-Melodies-0002.mp3" type="audio/mpeg">
+                </audio>
+                <p>Sample 3</p>
+                <button class="select-btn" type='button'>Select</button>
+            </div>
+
+            <div class="music-box" data-id="4">
+                <img src="/static/Picture2.png" alt="Music Thumbnail">
+                <div class="play-icon"></div>
+                <audio>
+                    <source src="/static/Mono-Melodies-0002.mp3" type="audio/mpeg">
+                </audio>
+                <p>Sample 4</p>
+                <button class="select-btn" type='button'>Select</button>
+            </div>
+
+            <div class="music-box" data-id="5">
+                <img src="/static/Picture2.png" alt="Music Thumbnail">
+                <div class="play-icon"></div>
+                <audio>
+                    <source src="/static/Mono-Melodies-0002.mp3" type="audio/mpeg">
+                </audio>
+                <p>Sample 5</p>
+                <button class="select-btn" type='button'>Select</button>
+            </div>
+
+            <div class="music-box" data-id="6">
+                <img src="/static/Picture2.png" alt="Music Thumbnail">
+                <div class="play-icon"></div>
+                <audio>
+                    <source src="/static/Mono-Melodies-0002.mp3" type="audio/mpeg">
+                </audio>
+                <p>Sample 6</p>
+                <button class="select-btn" type='button'>Select</button>
+            </div>
+
+            <div class="music-box" data-id="7">
+                <img src="/static/Picture2.png" alt="Music Thumbnail">
+                <div class="play-icon"></div>
+                <audio>
+                    <source src="/static/Mono-Melodies-0002.mp3" type="audio/mpeg">
+                </audio>
+                <p>Sample 7</p>
+                <button class="select-btn" type='button'>Select</button>
+            </div>
+
+            <div class="music-box" data-id="8">
+                <img src="/static/Picture2.png" alt="Music Thumbnail">
+                <div class="play-icon"></div>
+                <audio>
+                    <source src="/static/Mono-Melodies-0002.mp3" type="audio/mpeg">
+                </audio>
+                <p>Sample 8</p>
+                <button class="select-btn" type='button'>Select</button>
+            </div>
+        </div>
+        
+        <!-- Selected Sample Box -->
+        <div id="selected-sample" style="margin-left: 1rem;border-radius: 5px;width: 220px; border: 1px solid #00aaff;">
+            <h3>Selected: <span id="selected-text">None</span></h3>
+        </div>
+       
+
+
+        <button type="submit" id="generateMusic" class="btn" style="margin-left: 1rem;width:14rem;">Generate Music</button>
+        </form>
+
+        <h3 id="status"></h3>
+        <audio id="generatedMusic" controls style="display: none;">
+            <source id="musicSource" src="" type="audio/mpeg">
+        </audio>
+        <audio id="midi-audio">
+            <source src="{{ midi_file }}" type="audio/midi">
+            Your browser does not support MIDI playback.
+        </audio>
+        <hr></hr>
+        <!-- Custom MIDI Player -->
+        <div class="music-box">
+            <audio id="audioPlayer" src="{{ midi_file }}" preload="auto"></audio>
+            <button id="playPauseButton" class="play-pause-btn">Play MIDI</button>
+        </div>
+        
+
+<!-- MIDI Player using Magenta.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.26/Tone.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@magenta/music"></script>
+
+<script>
+    let isPlaying = false;
+    let player = new mm.Player();
+    const audioPlayer = document.getElementById("audioPlayer");
+    const playPauseButton = document.getElementById("playPauseButton");
+
+    async function toggleMIDI() {
+        if (isPlaying) {
+            // Stop MIDI playback
+            player.stop();
+            audioPlayer.pause();
+            playPauseButton.textContent = "Play MIDI";  // Change button text
+        } else {
+            // Play MIDI using Magenta.js
+            const midiUrl = "{{ midi_file }}";  // URL for the MIDI file
+            const midi = await fetch(midiUrl).then(response => response.arrayBuffer());
+            const midiDecoded = await mm.blobToNoteSequence(new Blob([midi]));
+            player.start(midiDecoded);
+
+            // Play the audio as fallback for browsers not supporting Magenta.js
+            audioPlayer.play();
+            playPauseButton.textContent = "Stop Playing";  // Change button text
+        }
+        isPlaying = !isPlaying;
+    }
+
+    // Add event listener to the button to toggle play/pause
+    playPauseButton.addEventListener('click', toggleMIDI);
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const musicBoxes = document.querySelectorAll(".music-box");
+
+        musicBoxes.forEach(box => {
+            const playIcon = box.querySelector(".play-icon");
+            const audio = box.querySelector("audio");
+            const playLabel = box.querySelector(".play-label");
+
+            playIcon.addEventListener("click", () => {
+                // Pause all other audio and remove "playing" class
+                musicBoxes.forEach(otherBox => {
+                    const otherAudio = otherBox.querySelector("audio");
+                    if (otherAudio !== audio) {
+                        otherAudio.pause();
+                        otherAudio.currentTime = 0;
+                        otherBox.classList.remove("playing");
+                    }
+                });
+
+                if (audio.paused) {
+                    audio.play();
+                    box.classList.add("playing");
+                    playLabel.textContent = "Pause MIDI";
+                } else {
+                    audio.pause();
+                    box.classList.remove("playing");
+                    playLabel.textContent = "Play MIDI";
+                }
+            });
+
+            audio.addEventListener("ended", () => {
+                box.classList.remove("playing");
+                playLabel.textContent = "Play MIDI";
+            });
+        });
+
+        document.getElementById("playPauseButton").addEventListener("click", toggleMIDI);
+    });
+</script>
+
+<!-- CSS Styles -->
+<style>
+    .play-container {
+        display: flex;
+        align-items: center;
+        background: linear-gradient(185deg, #000814, #1B212C);
+        padding: 10px 20px;
+        border-radius: 12px;
+        width: fit-content;
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    .play-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        font-size: 24px;
+        color: white;
+        margin-right: 10px;
+    }
+    
+    .play-icon::after {
+        content: "▶";
+    }
+    
+    .music-box.playing .play-icon::after {
+        content: "⏸";
+    }
+    
+    .play-label {
+        font-size: 16px;
+        font-weight: 500;
+        color: #fff;
+        text-align: center;
+        margin-left: 1rem;
+    }
+
+    .play-pause-btn {
+        background: linear-gradient(185deg, #04193a, #1B212C);
+        border: 1px solid #00aaff;
+        border-radius: 5px;
+        color: white;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s, transform 0.2s;
+    }
+    
+    .play-pause-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.4);
+    }
+      
+</style>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
