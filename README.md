@@ -39,7 +39,7 @@ This project aims to **automate melody creation** by:
 
 
 ## 🎵 Demo
-<img src="demo/sample_melody_output.png" width="500">
+<img src="demo.png" width="500">
 
 
 ## 🚀 How to Run
